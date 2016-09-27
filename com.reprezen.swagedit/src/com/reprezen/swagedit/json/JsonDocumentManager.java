@@ -10,7 +10,11 @@
  *******************************************************************************/
 package com.reprezen.swagedit.json;
 
+import java.io.BufferedReader;
+import java.io.CharConversionException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -61,24 +65,24 @@ public class JsonDocumentManager {
         JsonNode document;
         if (url.getFile().endsWith("json")) {
             try {
-                document = mapper.readTree(url);
+                document = doRead(mapper, url);
             } catch (Exception e) {
                 document = null;
             }
         } else if (url.getFile().endsWith("yaml") || url.getFile().endsWith("yml")) {
             try {
-                document = yamlMapper.readTree(url);
-            } catch (IOException e) {
+                document = doRead(yamlMapper, url);
+            } catch (Exception e) {
                 document = null;
             }
         } else {
             // cannot decide which format, so we try both parsers
             try {
-                document = mapper.readTree(url);
+                document = doRead(mapper, url);
             } catch (Exception e) {
                 try {
-                    document = yamlMapper.readTree(url);
-                } catch (IOException ee) {
+                    document = doRead(yamlMapper, url);
+                } catch (Exception ee) {
                     document = null;
                 }
             }
@@ -90,6 +94,34 @@ public class JsonDocumentManager {
         return document;
     }
 
+    /*
+     * This method tries to read the content of the URL as a JSON or YAML document depending on the configuration of the
+     * object mapper passed as parameter.
+     * 
+     * It also forces the content of the URL to be read with UTF-8 encoding, considering that only UTF encodings are
+     * valid encodings for JSON inputs.
+     */
+    protected JsonNode doRead(ObjectMapper mapper, URL url) throws Exception {
+        try (InputStream stream = url.openStream()) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
+                return mapper.readTree(reader);
+            } catch (CharConversionException e) {
+                throw new Exception(e);
+            }
+        } catch (IOException e) {
+            throw new Exception(e);
+        }
+    }
+
+    /**
+     * Returns the JSON node located at the given URI.
+     * 
+     * If the URI does not contain any valid JSON or YAML content, this method returns null.
+     * 
+     * @param uri
+     *            - valid URI
+     * @return JSON document
+     */
     public JsonNode getDocument(URI uri) {
         try {
             return getDocument(uri.toURL());
