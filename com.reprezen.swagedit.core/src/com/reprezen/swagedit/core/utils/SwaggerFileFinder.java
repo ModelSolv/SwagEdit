@@ -26,6 +26,12 @@ import com.google.common.collect.Lists;
  * Utility class used to located swagger files depending on a scope.
  */
 public class SwaggerFileFinder {
+	
+	private final String fileContentType;
+
+	public SwaggerFileFinder(String fileContentType) {
+		this.fileContentType = fileContentType;
+	}
 
     /**
      * Enumeration use to indicate where the finder should locate the swagger files.
@@ -101,7 +107,7 @@ public class SwaggerFileFinder {
     }
 
     protected Iterable<IFile> collectFiles(IContainer parent, IFile currentFile) {
-        final FileVisitor visitor = new FileVisitor(currentFile);
+        final FileVisitor visitor = new FileVisitor(currentFile, fileContentType);
 
         try {
             parent.accept(visitor, 0);
@@ -115,9 +121,11 @@ public class SwaggerFileFinder {
 
         private final List<IFile> files;
         private final IFile currentFile;
+		private final String fileContentType;
 
-        public FileVisitor(IFile currentFile) {
+        public FileVisitor(IFile currentFile, String fileContentType) {
             this.currentFile = currentFile;
+			this.fileContentType = fileContentType;
             this.files = new ArrayList<IFile>();
 
             if (currentFile != null) {
@@ -133,7 +141,10 @@ public class SwaggerFileFinder {
                 if (!proxy.isDerived()) {
                     IFile file = (IFile) proxy.requestResource();
                     if (!file.equals(currentFile)) {
-                        files.add(file);
+						String currFileType = file.getContentDescription().getContentType().getId();
+						if (fileContentType == null || fileContentType.equals(currFileType)) {
+							files.add(file);
+						}
                     }
                 }
             } else if (proxy.getType() == IResource.FOLDER

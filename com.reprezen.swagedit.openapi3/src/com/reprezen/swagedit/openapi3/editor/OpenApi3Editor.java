@@ -1,6 +1,7 @@
 package com.reprezen.swagedit.openapi3.editor;
 
 import org.dadacoalition.yedit.editor.YEditSourceViewerConfiguration;
+import org.eclipse.jface.text.IInformationControlCreator;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector;
@@ -48,6 +49,11 @@ public class OpenApi3Editor extends JsonEditor {
 		@Override
 		protected CompositeSchema getSchema() {
 			return Activator.getDefault().getSchema();
+		}
+
+		@Override
+		protected IInformationControlCreator getOutlineInformationControlCreator() {
+			return getOutlineInformationControlCreator(OpenApi3ContentDescriber.CONTENT_TYPE_ID);
 		}
 
 	}

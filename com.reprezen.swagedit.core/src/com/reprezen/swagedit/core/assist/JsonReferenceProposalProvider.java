@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.reprezen.swagedit.core.assist;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -26,9 +25,8 @@ import com.google.common.collect.Lists;
 import com.reprezen.swagedit.core.json.references.JsonDocumentManager;
 import com.reprezen.swagedit.core.utils.DocumentUtils;
 import com.reprezen.swagedit.core.utils.SwaggerFileFinder;
-import com.reprezen.swagedit.core.utils.URLUtils;
 import com.reprezen.swagedit.core.utils.SwaggerFileFinder.Scope;
-import com.reprezen.swagedit.core.validation.SwaggerError;
+import com.reprezen.swagedit.core.utils.URLUtils;
 import com.reprezen.swagedit.core.validation.ValidationUtil;
 
 /**
@@ -38,13 +36,11 @@ public class JsonReferenceProposalProvider {
 
     private final JsonDocumentManager manager = JsonDocumentManager.getInstance();
 	private final ContextTypeCollection contextTypes;
+	private final String fileContentType;
     
-    public JsonReferenceProposalProvider(ContextTypeCollection contextTypes) {
+    public JsonReferenceProposalProvider(ContextTypeCollection contextTypes, String fileContentType) {
 		this.contextTypes = contextTypes;
-	}
-    
-    public JsonReferenceProposalProvider(Iterable<ContextType> contextTypes) {
-		this(ContextType.newContentTypeCollection(contextTypes));
+		this.fileContentType = fileContentType;
 	}
 
     protected IFile getActiveFile() {
@@ -80,7 +76,7 @@ public class JsonReferenceProposalProvider {
         if (scope == Scope.LOCAL) {
             proposals.addAll(collectProposals(doc, type.value(), null));
         } else {
-            final SwaggerFileFinder fileFinder = new SwaggerFileFinder();
+            final SwaggerFileFinder fileFinder = new SwaggerFileFinder(fileContentType);
 
             for (IFile file : fileFinder.collectFiles(scope, currentFile)) {
                 IPath relative = file.equals(currentFile) ? null : file.getFullPath().makeRelativeTo(basePath);

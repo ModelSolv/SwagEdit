@@ -13,6 +13,8 @@ package com.reprezen.swagedit.openapi3.editor;
 import com.reprezen.swagedit.core.editor.TextContentDescriber;
 
 public class OpenApi3ContentDescriber extends TextContentDescriber {
+	
+	public static final String CONTENT_TYPE_ID = "com.reprezen.swagedit.contenttype.openapi3.yaml";
 
     @Override
     protected boolean isSupported(String content) {

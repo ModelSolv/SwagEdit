@@ -12,6 +12,7 @@ package com.reprezen.swagedit.assist;
 
 import com.google.common.collect.Lists;
 import com.reprezen.swagedit.core.assist.JsonReferenceProposalProvider;
+import com.reprezen.swagedit.editor.SwaggerContentDescriber;
 
 /**
  * Completion proposal provider for JSON references.
@@ -19,7 +20,7 @@ import com.reprezen.swagedit.core.assist.JsonReferenceProposalProvider;
 public class SwaggerReferenceProposalProvider extends JsonReferenceProposalProvider {
 
 	public SwaggerReferenceProposalProvider() {
-		super(SWAGGER_CONTEXT_TYPES);
+		super(SWAGGER_CONTEXT_TYPES, SwaggerContentDescriber.CONTENT_TYPE_ID);
 	}
 
 	protected static final String SCHEMA_DEFINITION_REGEX = "^/definitions/(\\w+/)+\\$ref|.*schema/(\\w+/)?\\$ref";

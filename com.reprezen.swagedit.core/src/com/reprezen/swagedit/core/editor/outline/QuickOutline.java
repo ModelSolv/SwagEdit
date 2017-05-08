@@ -75,11 +75,14 @@ public abstract class QuickOutline extends PopupDialog
     private TriggerSequence triggerSequence;
     private String bindingKey;
     private Timer filterTimer = null;
-    
+
+	private final String fileContentType;
+
     abstract protected CompositeSchema getSchema();
 
-    public QuickOutline(Shell parent, JsonEditor editor) {
+    public QuickOutline(Shell parent, JsonEditor editor, String fileContentType) {
         super(parent, PopupDialog.INFOPOPUPRESIZE_SHELLSTYLE, true, true, true, true, true, null, null);
+		this.fileContentType = fileContentType;
 
         IBindingService bindingService = (IBindingService) PlatformUI.getWorkbench().getAdapter(IBindingService.class);
         this.bindingKey = bindingService.getBestActiveBindingFormattedFor(COMMAND_ID);
@@ -170,7 +173,7 @@ public abstract class QuickOutline extends PopupDialog
 
     protected void handleMultiView() {
         currentScope = currentScope.next();
-        SwaggerFileFinder fileFinder = new SwaggerFileFinder();
+        SwaggerFileFinder fileFinder = new SwaggerFileFinder(fileContentType);
         IEditorInput input = editor.getEditorInput();
 
         IFile currentFile = null;

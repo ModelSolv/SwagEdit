@@ -1,6 +1,7 @@
 package com.reprezen.swagedit.editor;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.IInformationControlCreator;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector;
@@ -34,6 +35,11 @@ public class SwaggerSourceViewerConfiguration extends JsonSourceViewerConfigurat
 	@Override
 	protected CompositeSchema getSchema() {
 		return com.reprezen.swagedit.Activator.getDefault().getSchema();
+	}
+
+	@Override
+	protected IInformationControlCreator getOutlineInformationControlCreator() {
+		return getOutlineInformationControlCreator(SwaggerContentDescriber.CONTENT_TYPE_ID);
 	}
 
 }

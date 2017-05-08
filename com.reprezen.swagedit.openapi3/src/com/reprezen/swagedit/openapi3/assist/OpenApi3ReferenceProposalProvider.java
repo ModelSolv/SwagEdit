@@ -12,11 +12,12 @@ package com.reprezen.swagedit.openapi3.assist;
 
 import com.google.common.collect.Lists;
 import com.reprezen.swagedit.core.assist.JsonReferenceProposalProvider;
+import com.reprezen.swagedit.openapi3.editor.OpenApi3ContentDescriber;
 
 public class OpenApi3ReferenceProposalProvider extends JsonReferenceProposalProvider {
 
 	public OpenApi3ReferenceProposalProvider() {
-		super(OPEN_API3_CONTEXT_TYPES);
+		super(OPEN_API3_CONTEXT_TYPES, OpenApi3ContentDescriber.CONTENT_TYPE_ID);
 	}
 
 	protected static final String SCHEMA_DEFINITION_REGEX = "^/components/schemas/(\\w+/)+\\$ref|.*schema/(\\w+/)?\\$ref";
