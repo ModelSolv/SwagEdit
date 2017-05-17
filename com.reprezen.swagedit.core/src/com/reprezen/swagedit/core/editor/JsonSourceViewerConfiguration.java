@@ -79,7 +79,7 @@ public abstract class JsonSourceViewerConfiguration extends YEditSourceViewerCon
     }
     
     protected JsonContentAssistProcessor createContentAssistProcessor(ContentAssistant ca) {
-    	return new JsonContentAssistProcessor(ca){
+    	return new JsonContentAssistProcessor(ca, null){
 
 			@Override
 			protected TemplateStore getTemplateStore() {
@@ -162,10 +162,12 @@ public abstract class JsonSourceViewerConfiguration extends YEditSourceViewerCon
         return assistant;
     }
 
-    private IInformationControlCreator getOutlineInformationControlCreator() {
+    abstract protected IInformationControlCreator getOutlineInformationControlCreator();
+   
+    protected IInformationControlCreator getOutlineInformationControlCreator(final String fileContentType) {
         return new IInformationControlCreator() {
             public IInformationControl createInformationControl(Shell parent) {
-                QuickOutline dialog = new QuickOutline(parent, getEditor()) {
+                QuickOutline dialog = new QuickOutline(parent, getEditor(), fileContentType) {
 
 					@Override
 					protected CompositeSchema getSchema() {
