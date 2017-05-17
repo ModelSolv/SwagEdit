@@ -673,4 +673,34 @@ class ValidatorTest {
 		assertThat(errors.map[line], hasItems(14))
 	}
 
+	@Test
+	def void testObjectWithPropertyNamedProperties_ShouldBeValid() {
+		val content = '''
+		swagger: '2.0'
+		info:
+		  version: 0.0.0
+		  title: Simple API
+		paths:
+		  /foo/{bar}:
+		    get:
+		      responses:
+		        '200':
+		          description: OK
+		definitions:
+		  Pets:
+		    type: object
+		    properties:
+		      properties:
+		        type: object
+		        properties:
+		          name: 
+		            type: string
+		'''
+
+		document.set(content)
+		document.onChange()
+
+		val errors = validator.validate(document, null)		
+		assertEquals(0, errors.size())
+	}
 }

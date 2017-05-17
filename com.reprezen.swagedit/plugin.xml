@@ -52,6 +52,12 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
+            class="com.reprezen.swagedit.core.preferences.KaizenPreferencePage"
+            id="com.reprezen.kaizen.preferences"
+            name="%preferences.top-page.name">
+      </page>
+      <page
+            category="com.reprezen.kaizen.preferences"
             class="com.reprezen.swagedit.preferences.SwaggerPreferencePage"
             id="com.reprezen.swagedit.preferences"
             name="%preferences.page.name">

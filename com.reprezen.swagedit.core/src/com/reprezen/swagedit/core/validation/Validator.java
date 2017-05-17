@@ -211,6 +211,11 @@ public class Validator {
     protected void checkMissingType(Set<SwaggerError> errors, AbstractNode node) {
         // object
         if (node.get("properties") != null) {
+            // bypass this node, it is a property whose name is `properties`
+            if (node.getProperty().equals("properties")) {
+                return;
+            }
+
             if (node.get("type") == null) {
                 errors.add(error(node, IMarker.SEVERITY_WARNING, Messages.error_object_type_missing));
             } else {

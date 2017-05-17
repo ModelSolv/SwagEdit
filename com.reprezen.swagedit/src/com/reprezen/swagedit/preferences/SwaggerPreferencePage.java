@@ -10,30 +10,14 @@
  *******************************************************************************/
 package com.reprezen.swagedit.preferences;
 
-import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPreferencePage;
-
 import com.reprezen.swagedit.Activator;
+import com.reprezen.swagedit.core.preferences.KaizenPreferencePage;
 
-public class SwaggerPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class SwaggerPreferencePage extends KaizenPreferencePage {
 
     public SwaggerPreferencePage() {
-        super(GRID);
         setDescription("Swagger Preferences");
         setPreferenceStore(Activator.getDefault().getPreferenceStore());
-    }
-
-    @Override
-    public void init(IWorkbench workbench) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void createFieldEditors() {
-        // TODO Auto-generated method stub
-
     }
 
 }

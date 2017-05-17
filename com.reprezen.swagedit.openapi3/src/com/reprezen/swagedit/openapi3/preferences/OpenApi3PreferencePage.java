@@ -10,26 +10,14 @@
  *******************************************************************************/
 package com.reprezen.swagedit.openapi3.preferences;
 
-import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPreferencePage;
-
+import com.reprezen.swagedit.core.preferences.KaizenPreferencePage;
 import com.reprezen.swagedit.openapi3.Activator;
 
-public class OpenApi3PreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class OpenApi3PreferencePage extends KaizenPreferencePage {
 
     public OpenApi3PreferencePage() {
-        super(GRID);
-        setDescription("OpenAPI v3 Preferences");
+        setDescription("KaiZen OpenAPI Editor preferences for OpenAPI v3 (experimental)");
         setPreferenceStore(Activator.getDefault().getPreferenceStore());
-    }
-
-    @Override
-    public void init(IWorkbench workbench) {
-     }
-
-    @Override
-    protected void createFieldEditors() {
     }
 
 }

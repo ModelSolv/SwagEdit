@@ -11,8 +11,8 @@
 <repository location="http://download.eclipse.org/eclipse/updates/4.4"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.dadacoalition.yedit.feature.feature.group" version="1.0.20.201610121952-SNAPSHOT"/>
-<repository location="http://products-internal.reprezen.com/yedit/1.0.20/1.0.20.201610121952"/>
+<unit id="org.dadacoalition.yedit.feature.feature.group" version="1.0.20"/>
+<repository location="http://products-internal.reprezen.com/yedit/1.0.20"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="com.github.eclipsecolortheme.feature.feature.group" version="1.0.0.201410260308"/>
