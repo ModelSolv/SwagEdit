@@ -35,20 +35,20 @@ import com.reprezen.swagedit.core.validation.ValidationUtil;
 public class JsonReferenceProposalProvider {
 
     private final JsonDocumentManager manager = JsonDocumentManager.getInstance();
-	private final ContextTypeCollection contextTypes;
-	private final String fileContentType;
-    
+    private final ContextTypeCollection contextTypes;
+    private final String fileContentType;
+
     public JsonReferenceProposalProvider(ContextTypeCollection contextTypes, String fileContentType) {
-		this.contextTypes = contextTypes;
-		this.fileContentType = fileContentType;
-	}
+        this.contextTypes = contextTypes;
+        this.fileContentType = fileContentType;
+    }
 
     protected IFile getActiveFile() {
         return DocumentUtils.getActiveEditorInput().getFile();
     }
-    
+
     protected ContextTypeCollection getContextTypes() {
-    	return contextTypes;
+        return contextTypes;
     }
 
     public boolean canProvideProposal(JsonPointer pointer) {
@@ -101,13 +101,13 @@ public class JsonReferenceProposalProvider {
 
         private final String value;
         private final String label;
-		private final String regex;
+        private final String regex;
         private final boolean isLocalOnly;
 
         public ContextType(String value, String label, String regex) {
             this.value = value;
             this.label = label;
-			this.regex = regex;
+            this.regex = regex;
             this.isLocalOnly = false;
         }
 
@@ -163,12 +163,12 @@ public class JsonReferenceProposalProvider {
         }
 
         public static ContextTypeCollection newContentTypeCollection(Iterable<ContextType> contextTypes) {
-        	return new ContextTypeCollection(contextTypes);
+            return new ContextTypeCollection(contextTypes);
         }
-        
-		public static ContextTypeCollection emptyContentTypeCollection() {
-			return new ContextTypeCollection(Collections.<ContextType>emptyList());
-		}
+
+        public static ContextTypeCollection emptyContentTypeCollection() {
+            return new ContextTypeCollection(Collections.<ContextType> emptyList());
+        }
     }
 
     public static class ContextTypeValue extends ContextType {
@@ -204,24 +204,24 @@ public class JsonReferenceProposalProvider {
     }
 
     public static class ContextTypeCollection {
-    	
-    	private final Iterable<ContextType> contextTypes;
 
-		protected ContextTypeCollection(Iterable<ContextType> contextTypes) {
-			this.contextTypes = contextTypes;
-    	}
-		
-		public ContextType get(String path) {
-			if (Strings.emptyToNull(path) == null) {
-				return ContextType.UNKNOWN;
-			}
-			for (ContextType next : contextTypes) {
-				if (path.matches(next.regex)) {
-					return next;
-				}
-			}
-			return ContextType.UNKNOWN;
-		}
+        private final Iterable<ContextType> contextTypes;
+
+        protected ContextTypeCollection(Iterable<ContextType> contextTypes) {
+            this.contextTypes = contextTypes;
+        }
+
+        public ContextType get(String path) {
+            if (Strings.emptyToNull(path) == null) {
+                return ContextType.UNKNOWN;
+            }
+            for (ContextType next : contextTypes) {
+                if (path.matches(next.regex)) {
+                    return next;
+                }
+            }
+            return ContextType.UNKNOWN;
+        }
     }
 
 }
