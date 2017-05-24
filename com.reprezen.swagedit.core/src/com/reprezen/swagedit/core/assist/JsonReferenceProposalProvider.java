@@ -51,6 +51,10 @@ public class JsonReferenceProposalProvider {
     	return contextTypes;
     }
 
+    public boolean canProvideProposal(JsonPointer pointer) {
+        return pointer != null && contextTypes.get(pointer.toString()) != ContextType.UNKNOWN;
+    }
+
     /**
      * Returns collection of JSON reference proposals.
      * 
@@ -74,14 +78,14 @@ public class JsonReferenceProposalProvider {
         final List<Proposal> proposals = Lists.newArrayList();
 
         if (scope == Scope.LOCAL) {
-            proposals.addAll(collectProposals(doc, type.value(), null));
-        } else {
+            proposals.addAll(type.collectProposals(doc, null));
+        } else if (!type.isLocalOnly()) {
             final SwaggerFileFinder fileFinder = new SwaggerFileFinder(fileContentType);
 
             for (IFile file : fileFinder.collectFiles(scope, currentFile)) {
                 IPath relative = file.equals(currentFile) ? null : file.getFullPath().makeRelativeTo(basePath);
                 JsonNode content = file.equals(currentFile) ? doc : manager.getDocument(file.getLocationURI());
-                proposals.addAll(collectProposals(content, type.value(), relative));
+                proposals.addAll(type.collectProposals(content, relative));
             }
         }
 
@@ -98,11 +102,20 @@ public class JsonReferenceProposalProvider {
         private final String value;
         private final String label;
 		private final String regex;
+        private final boolean isLocalOnly;
 
         public ContextType(String value, String label, String regex) {
             this.value = value;
             this.label = label;
 			this.regex = regex;
+            this.isLocalOnly = false;
+        }
+
+        public ContextType(String value, String label, String regex, boolean isLocalOnly) {
+            this.value = value;
+            this.label = label;
+            this.regex = regex;
+            this.isLocalOnly = isLocalOnly;
         }
 
         public String value() {
@@ -112,7 +125,43 @@ public class JsonReferenceProposalProvider {
         public String label() {
             return label;
         }
-        
+
+        public boolean isLocalOnly() {
+            return isLocalOnly;
+        }
+
+        /**
+         * Returns all proposals found in the document at the specified field.
+         * 
+         * @param document
+         * @param fieldName
+         * @param path
+         * @return Collection of proposals
+         */
+        public Collection<Proposal> collectProposals(JsonNode document, IPath path) {
+            final Collection<Proposal> results = Lists.newArrayList();
+            if (value() == null) {
+                return results;
+            }
+
+            final JsonNode parameters = ValidationUtil.findNode(value(), document);
+            if (parameters == null) {
+                return results;
+            }
+
+            final String basePath = (path != null ? path.toString() : "") + "#/" + value() + "/";
+
+            for (Iterator<String> it = parameters.fieldNames(); it.hasNext();) {
+                String key = it.next();
+                String value = basePath + key.replaceAll("/", "~1");
+                String encoded = URLUtils.encodeURL(value);
+
+                results.add(new Proposal("\"" + encoded + "\"", key, null, value));
+            }
+
+            return results;
+        }
+
         public static ContextTypeCollection newContentTypeCollection(Iterable<ContextType> contextTypes) {
         	return new ContextTypeCollection(contextTypes);
         }
@@ -121,7 +170,39 @@ public class JsonReferenceProposalProvider {
 			return new ContextTypeCollection(Collections.<ContextType>emptyList());
 		}
     }
-    
+
+    public static class ContextTypeValue extends ContextType {
+
+        public ContextTypeValue(String value, String label, String regex) {
+            super(value, label, regex);
+        }
+
+        public ContextTypeValue(String value, String label, String regex, boolean isLocalOnly) {
+            super(value, label, regex, isLocalOnly);
+        }
+
+        @Override
+        public Collection<Proposal> collectProposals(JsonNode document, IPath path) {
+            final Collection<Proposal> results = Lists.newArrayList();
+            if (value() == null) {
+                return results;
+            }
+
+            final List<JsonNode> parameters = document.findValues(value());
+            if (parameters == null) {
+                return results;
+            }
+
+            for (JsonNode node : parameters) {
+                String key = node.asText();
+
+                results.add(new Proposal(key, key, null, key));
+            }
+
+            return results;
+        }
+    }
+
     public static class ContextTypeCollection {
     	
     	private final Iterable<ContextType> contextTypes;
@@ -141,37 +222,6 @@ public class JsonReferenceProposalProvider {
 			}
 			return ContextType.UNKNOWN;
 		}
-    }
-
-    /**
-     * Returns all proposals found in the document at the specified field.
-     * 
-     * @param document
-     * @param fieldName
-     * @param path
-     * @return Collection of proposals
-     */
-    public Collection<Proposal> collectProposals(JsonNode document, String fieldName, IPath path) {
-        final Collection<Proposal> results = Lists.newArrayList();
-        if (fieldName == null) {
-            return results;
-        }
-
-		final JsonNode parameters = ValidationUtil.findNode(fieldName, document);
-        if (parameters == null) {
-        	return results;
-        }
-        final String basePath = (path != null ? path.toString() : "") + "#/" + fieldName + "/";
-
-        for (Iterator<String> it = parameters.fieldNames(); it.hasNext();) {
-            String key = it.next();
-            String value = basePath + key.replaceAll("/", "~1");
-            String encoded = URLUtils.encodeURL(value);
-
-            results.add(new Proposal("\"" + encoded + "\"", key, null, value));
-        }
-
-        return results;
     }
 
 }
