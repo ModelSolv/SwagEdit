@@ -32,13 +32,14 @@ public class StyledCompletionProposal
     private final String replacementString;
     private final StyledString label;
     private final String description;
+    /** Lower-cased prefix - content assist typeahead should be case-insensitive */
     private final String prefix;
 
     public StyledCompletionProposal(String replacement, StyledString label, String prefix, String description,
             int offset) {
         this.label = label;
         this.replacementString = replacement;
-        this.prefix = prefix;
+        this.prefix = prefix != null ? prefix.toLowerCase() : null;
         this.replacementOffset = offset;
         this.description = description;
     }
@@ -55,9 +56,9 @@ public class StyledCompletionProposal
         String text = replacementString;
 
         if (Strings.emptyToNull(prefix) != null) {
-            if (replacementString.startsWith(prefix)) {
+            if (replacementString.toLowerCase().startsWith(prefix)) {
                 text = replacementString.substring(prefix.length());
-            } else if (replacementString.contains(prefix)) {
+            } else if (replacementString.toLowerCase().contains(prefix)) {
                 offset = replacementOffset - prefix.length();
                 length = prefix.length();
             }
@@ -75,9 +76,9 @@ public class StyledCompletionProposal
         int offset = replacementOffset;
 
         if (Strings.emptyToNull(prefix) != null) {
-            if (replacementString.startsWith(prefix)) {
+            if (replacementString.toLowerCase().startsWith(prefix)) {
                 offset = replacementOffset - prefix.length();
-            } else if (replacementString.contains(prefix)) {
+            } else if (replacementString.toLowerCase().contains(prefix)) {
                 offset = replacementOffset - prefix.length();
             }
         }

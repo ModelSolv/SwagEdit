@@ -28,12 +28,12 @@ class JsonReferenceContextTest {
 
 	@Test
 	def void requestBody_in_callback() {
-		assertTrue("/components/callbacks/myWebhook/$request.body#~1url/post/requestBody/$ref".matches(OpenApi3ReferenceProposalProvider.PARAMETER_REGEX))
+		assertTrue("/components/callbacks/myWebhook/$request.body#~1url/post/requestBody/$ref".matches(OpenApi3ReferenceProposalProvider.REQUEST_BODY_REGEX))
 	}
 
 	@Test
 	def void requestBody_in_operation() {
-		assertTrue("/paths/~1pets/post/requestBody/$ref".matches(OpenApi3ReferenceProposalProvider.PARAMETER_REGEX))
+		assertTrue("/paths/~1pets/post/requestBody/$ref".matches(OpenApi3ReferenceProposalProvider.REQUEST_BODY_REGEX))
 	}
 
 	@Test

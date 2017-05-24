@@ -62,7 +62,7 @@ public class Proposal {
         StyledCompletionProposal proposal = null;
         if (Strings.emptyToNull(prefix) == null) {
             proposal = new StyledCompletionProposal(replacementString, styledString, null, description, offset);
-        } else if (replacementString.contains(prefix) || replacementString.startsWith(prefix)) {
+        } else if (replacementString.toLowerCase().contains(prefix.toLowerCase())) {
             proposal = new StyledCompletionProposal(replacementString, styledString, prefix, description, offset);
         }
 
