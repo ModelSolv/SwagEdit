@@ -32,6 +32,7 @@ public class OpenApi3ReferenceProposalProvider extends JsonReferenceProposalProv
     protected static final String RESPONSE_REGEX = ".*/responses/([0-9X]{3}|default)/\\$ref";
     protected static final String REQUEST_BODY_REGEX = ".*/requestBody/\\$ref";
     protected static final String LINK_REGEX = ".*/links/"+COMPONENT_NAME_REGEX +"/\\$ref";
+    protected static final String LINK_OPERATIONID_REGEX = ".*/links/" + COMPONENT_NAME_REGEX + "/operationId";
     protected static final String EXAMPLE_REGEX = ".*/examples/"+COMPONENT_NAME_REGEX +"/\\$ref";
     protected static final String SCHEMA_EXAMPLE_REGEX = SCHEMA_COMPONENT_REGEX + "example/\\$ref" + "|"
             + INLINE_SCHEMA_REGEX + "example/\\$ref";
@@ -52,7 +53,11 @@ public class OpenApi3ReferenceProposalProvider extends JsonReferenceProposalProv
     //public static final ContextType SCHEMA_EXAMPLE = new ContextType("its/not/example/component", "example", SCHEMA_EXAMPLE_REGEX);
     public static final ContextType HEADER = new ContextType("components/headers", "header", HEADER_REGEX);
     public static final ContextType CALLBACK = new ContextType("components/callbacks", "callback", CALLBACK_REGEX);
-   
+    public static final ContextType PATH_LINK_OPERATION_ID = new ContextType("components/links/", "operationId",
+            CALLBACK_REGEX);
+    public static final ContextType LINK_OPERATIONID = new ContextTypeValue("operationId", "operationId",
+            LINK_OPERATIONID_REGEX, true);
+
     public static final ContextTypeCollection OPEN_API3_CONTEXT_TYPES = ContextType
             .newContentTypeCollection(Lists.newArrayList( //
                   //  SCHEMA_EXAMPLE, // should go before schema definition
@@ -64,7 +69,7 @@ public class OpenApi3ReferenceProposalProvider extends JsonReferenceProposalProv
                     PATH_LINK, //
                     EXAMPLE, //
                     HEADER, //
-                    CALLBACK//
-                    ));
+                    CALLBACK, //
+                    LINK_OPERATIONID));
 
 }
