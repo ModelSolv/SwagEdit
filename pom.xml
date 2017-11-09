@@ -5,7 +5,7 @@
 
 	<groupId>com.reprezen</groupId>
 	<artifactId>SwagEdit</artifactId>
-	<version>0.8.0-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -21,11 +21,12 @@
 	</modules>
 
 	<properties>
+        <kzoe.version>1.0.0-SNAPSHOT</kzoe.version>
 		<tycho.version>0.23.1</tycho.version>
 		<xtend-maven-plugin.version>2.9.1</xtend-maven-plugin.version>
 		<target-platform-artifact-id>com.reprezen.swagedit.target</target-platform-artifact-id>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+ 	</properties>
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -48,7 +49,7 @@
 						<artifact>
 							<groupId>com.reprezen</groupId>
 							<artifactId>${target-platform-artifact-id}</artifactId>
-							<version>0.8.0-SNAPSHOT</version>
+							<version>${kzoe.version}</version>
 						</artifact>
 					</target>
 				</configuration>
