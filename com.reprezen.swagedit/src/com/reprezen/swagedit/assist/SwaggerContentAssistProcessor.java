@@ -33,7 +33,7 @@ public class SwaggerContentAssistProcessor extends JsonContentAssistProcessor {
             new ResponseCodeContentAssistExt());
 
 	public SwaggerContentAssistProcessor(ContentAssistant ca) {
-        super(ca, proposalProvider, new SwaggerReferenceProposalProvider());
+        super(ca, proposalProvider, new SwaggerReferenceProposalProvider(), new SwaggerExampleProposalProvider());
 	}
 
 	@Override

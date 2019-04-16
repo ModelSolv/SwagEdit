@@ -49,6 +49,11 @@ public class DocumentUtils {
 
         return input instanceof FileEditorInput ? (FileEditorInput) input : null;
     }
+    
+    public static URI getActiveEditorInputURI() {
+    	final FileEditorInput activeEditorInput = getActiveEditorInput();
+    	return activeEditorInput != null ? activeEditorInput.getURI() : null;
+    }
 
     /**
      * Returns the swagger document if exists for the given path.

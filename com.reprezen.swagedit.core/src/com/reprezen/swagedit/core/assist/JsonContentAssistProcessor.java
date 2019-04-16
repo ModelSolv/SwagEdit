@@ -67,6 +67,7 @@ public abstract class JsonContentAssistProcessor extends TemplateCompletionProce
 
    private final JsonProposalProvider proposalProvider;
    private final JsonReferenceProposalProvider referenceProposalProvider;
+   private final JsonExampleProposalProvider exampleProposalProvider;
    private final ContentAssistant contentAssistant;
    
     /**
@@ -93,15 +94,19 @@ public abstract class JsonContentAssistProcessor extends TemplateCompletionProce
     
 	public JsonContentAssistProcessor(ContentAssistant ca, String fileContentType) {
 		this(ca, new JsonProposalProvider(),
-				new JsonReferenceProposalProvider(ContextType.emptyContentTypeCollection(), fileContentType));
+				new JsonReferenceProposalProvider(ContextType.emptyContentTypeCollection(), fileContentType),
+				new JsonExampleProposalProvider(ContextType.emptyContentTypeCollection()));
 	}
-    
-    public JsonContentAssistProcessor(ContentAssistant ca, JsonProposalProvider proposalProvider, JsonReferenceProposalProvider referenceProposalProvider) {
-        this.contentAssistant = ca;
-        this.proposalProvider = proposalProvider;
-        this.referenceProposalProvider = referenceProposalProvider;
-        this.textMessages = initTextMessages();
-    }
+
+	public JsonContentAssistProcessor(ContentAssistant ca, JsonProposalProvider proposalProvider,
+			JsonReferenceProposalProvider referenceProposalProvider,
+			JsonExampleProposalProvider exampleProposalProvider) {
+		this.contentAssistant = ca;
+		this.proposalProvider = proposalProvider;
+		this.referenceProposalProvider = referenceProposalProvider;
+		this.exampleProposalProvider = exampleProposalProvider;
+		this.textMessages = initTextMessages();
+	}
     
     protected abstract TemplateStore getTemplateStore();
 
@@ -145,8 +150,15 @@ public abstract class JsonContentAssistProcessor extends TemplateCompletionProce
             updateStatus();
             kaizenProposals = referenceProposalProvider.getProposals(currentPath, document, currentScope);
         } else {
-            clearStatus();
-            kaizenProposals = proposalProvider.getProposals(currentPath, currentModel, prefix);
+        	final boolean isExampleCompletion = exampleProposalProvider.canProvideProposal(currentModel, currentPath);
+        	if (isExampleCompletion) {
+        		//TODO: Update or clear status ???????
+        		kaizenProposals = exampleProposalProvider.getProposals(currentPath, document);
+        	} else {
+        		clearStatus();
+        		kaizenProposals = proposalProvider.getProposals(currentPath, currentModel, prefix);
+        	}
+        	
         }
    
         final Collection<ICompletionProposal> proposals = getCompletionProposals(kaizenProposals, prefix, documentOffset, selection.getText());

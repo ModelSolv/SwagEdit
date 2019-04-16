@@ -36,18 +36,18 @@ public class OpenApi3ContentAssistProcessor extends JsonContentAssistProcessor {
             new SchemaFormatContentAssistExt(), //
             new ParameterInContentAssistExt(), //
             new ResponseCodeContentAssistExt(), //
-            new MediaTypeContentAssistExt());
+			new MediaTypeContentAssistExt());
 
 	public OpenApi3ContentAssistProcessor(ContentAssistant ca) {
-        super(ca, proposalProvider, new OpenApi3ReferenceProposalProvider());
+        super(ca, proposalProvider, new OpenApi3ReferenceProposalProvider(), new OpenApi3ExampleProposalProvider());
 	}
 
     public OpenApi3ContentAssistProcessor(ContentAssistant ca, CompositeSchema schema) {
-        super(ca, proposalProvider, new OpenApi3ReferenceProposalProvider(schema));
+        super(ca, proposalProvider, new OpenApi3ReferenceProposalProvider(schema), new OpenApi3ExampleProposalProvider());
     }
     
     public OpenApi3ContentAssistProcessor(ContentAssistant ca, JsonReferenceProposalProvider referenceProposalProvider) {
-        super(ca, proposalProvider, referenceProposalProvider);
+        super(ca, proposalProvider, referenceProposalProvider, new OpenApi3ExampleProposalProvider());
     } 
     
 	@Override
