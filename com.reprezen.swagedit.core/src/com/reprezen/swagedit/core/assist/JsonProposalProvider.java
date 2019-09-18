@@ -212,7 +212,7 @@ public class JsonProposalProvider {
     protected Collection<ProposalDescriptor> createArrayProposals(ArrayTypeDefinition type, AbstractNode node) {
         Collection<ProposalDescriptor> proposals = new LinkedHashSet<>();
 
-        if (type.itemsType.getType() == JsonType.ENUM) {
+        if (type.itemsType != null && type.itemsType.getType() == JsonType.ENUM) {
             String labelType = type.itemsType.getContainingProperty();
 
             for (String literal : enumLiterals(type.itemsType)) {
