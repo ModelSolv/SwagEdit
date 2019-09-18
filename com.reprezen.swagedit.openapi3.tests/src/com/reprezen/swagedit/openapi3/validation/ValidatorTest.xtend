@@ -11,7 +11,6 @@
 package com.reprezen.swagedit.openapi3.validation
 
 import com.reprezen.swagedit.core.validation.Messages
-import com.reprezen.swagedit.core.validation.SwaggerError
 import com.reprezen.swagedit.openapi3.editor.OpenApi3Document
 import com.reprezen.swagedit.openapi3.schema.OpenApi3Schema
 import java.net.URI
@@ -21,6 +20,7 @@ import org.junit.Test
 
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.*
+import org.junit.Ignore
 
 class ValidatorTest {
 
@@ -159,12 +159,11 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 
 		assertEquals(1, errors.size())
-		assertThat(
-			errors,
-			hasItems(
-				new SwaggerError(13, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-			)
-		)
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 12)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
 	@Test
@@ -189,15 +188,15 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		// Update with #353 Validation of external $ref property values should show error on unexpected object type"
 		assertEquals(1, errors.size())
-		assertThat(
-			errors,
-			hasItems(
-				new SwaggerError(13, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-			)
-		)
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 12)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
-//	@Test
+	@Ignore
+	@Test
 	def void testValidationShouldFail_pathInNotJson() {
 		val content = '''
 			openapi: "3.0.0"
@@ -219,13 +218,6 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		// Update with #353 Validation of external $ref property values should show error on unexpected object type"
 		assertEquals(2, errors.size())
-		assertThat(
-			errors,
-			hasItems(
-				new SwaggerError(13, IMarker.SEVERITY_ERROR, Messages.error_invalid_reference_type),
-				new SwaggerError(13, IMarker.SEVERITY_ERROR, Messages.error_invalid_reference)
-			)
-		)
 	}
 
 	@Test
@@ -328,12 +320,10 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 
-		assertThat(
-			errors,
-			hasItems(
-				new SwaggerError(15, IMarker.SEVERITY_WARNING, Messages.error_invalid_operation_ref)
-			)
-		)
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 14)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_invalid_operation_ref, error.message)
 	}
 
 	@Test
@@ -357,12 +347,11 @@ class ValidatorTest {
 		document.set(content)
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
-		assertThat(
-			errors,
-			hasItems(
-				new SwaggerError(6, IMarker.SEVERITY_ERROR, Messages.error_invalid_security_scheme)
-			)
-		)
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 5)
+		assertEquals(IMarker.SEVERITY_ERROR, error.level)
+		assertEquals(Messages.error_invalid_security_scheme, error.message)
 	}
 
 	@Test
@@ -386,13 +375,13 @@ class ValidatorTest {
 		document.set(content)
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
-		assertThat(
-			errors,
-			hasItems(
-				new SwaggerError(10, IMarker.SEVERITY_ERROR, Messages.error_invalid_security_scheme)
-			)
-		)
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 9)
+		assertEquals(IMarker.SEVERITY_ERROR, error.level)
+		assertEquals(Messages.error_invalid_security_scheme, error.message)
 	}
+
 	@Test
 	def void testValidationShouldPass_SecuritySchemes() {
 		val content = '''
@@ -446,7 +435,7 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertTrue(errors.map[message].forall[shouldHaveInvalidReferenceType()])
-		assertThat(errors.map[line], hasItems(10))
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(9))
 	}
 
 	@Test
@@ -474,12 +463,11 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 
 		assertEquals(1, errors.size())
-		assertThat(
-			errors,
-			hasItems(
-				new SwaggerError(10, IMarker.SEVERITY_ERROR, Messages.error_invalid_parameter_location)
-			)
-		)
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 9)
+		assertEquals( IMarker.SEVERITY_ERROR, error.level)
+		assertEquals(Messages.error_invalid_parameter_location,error.message)
 	}
 
 	@Test
@@ -593,7 +581,7 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertTrue(errors.map[message].forall[it.equals(Messages.error_array_items_should_be_object)])
-		assertThat(errors.map[line], hasItems(15))
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(14))
 	}
 
 	@Test
@@ -697,7 +685,7 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertTrue(errors.map[message].forall[shouldBeInvalidScopeReference("foo", "oauth")])
-		assertThat(errors.map[line], hasItems(11))
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(10))
 	}
 
 	@Test
@@ -754,7 +742,7 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertTrue(errors.map[message].forall[shouldBeEmptyMessage("basic", "http")])
-		assertThat(errors.map[line], hasItems(9))
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(8))
 	}
 
 	@Test
@@ -780,7 +768,7 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertTrue(errors.map[message].forall[it.equals(Messages.error_invalid_reference_type)])
-		assertThat(errors.map[line], hasItems(14))
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(13))
 	}
 
 	private def shouldHaveInvalidReferenceType(String actual) {

@@ -60,7 +60,7 @@ public class OpenApi3ReferenceValidator extends JsonReferenceValidator {
 
             Set<JsonNode> report = getSchemaValidator().validate(target, ptr);
             if (!report.isEmpty()) {
-                errors.addAll(createReferenceError(SEVERITY_WARNING, message, sources));
+                errors.addAll(createReferenceError(doc, SEVERITY_WARNING, message, sources));
             }
         }
 

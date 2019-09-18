@@ -17,6 +17,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IInformationControl;
 import org.eclipse.jface.text.IInformationControlCreator;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
@@ -32,12 +33,15 @@ import org.eclipse.jface.text.quickassist.IQuickAssistAssistant;
 import org.eclipse.jface.text.quickassist.QuickAssistAssistant;
 import org.eclipse.jface.text.reconciler.IReconciler;
 import org.eclipse.jface.text.reconciler.MonoReconciler;
+import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.widgets.Shell;
 
 import com.reprezen.swagedit.core.assist.JsonContentAssistProcessor;
 import com.reprezen.swagedit.core.assist.JsonQuickAssistProcessor;
 import com.reprezen.swagedit.core.editor.outline.QuickOutline;
+import com.reprezen.swagedit.core.hover.ProblemAnnotationHover;
+import com.reprezen.swagedit.core.hover.ProblemTextHover;
 import com.reprezen.swagedit.core.schema.CompositeSchema;
 
 public abstract class JsonSourceViewerConfiguration extends YEditSourceViewerConfiguration {
@@ -75,6 +79,16 @@ public abstract class JsonSourceViewerConfiguration extends YEditSourceViewerCon
         return ca;
     }
 
+    @Override
+    public IAnnotationHover getAnnotationHover(ISourceViewer sourceViewer) {
+        return new ProblemAnnotationHover(sourceViewer);
+    }
+
+    @Override
+    public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
+        return new ProblemTextHover(sourceViewer);
+    }
+
     protected abstract JsonContentAssistProcessor createContentAssistProcessor(ContentAssistant ca);
 
     @Override
@@ -101,11 +115,6 @@ public abstract class JsonSourceViewerConfiguration extends YEditSourceViewerCon
     @Override
     public IHyperlinkDetector[] getHyperlinkDetectors(ISourceViewer sourceViewer) {
         return new IHyperlinkDetector[] { new URLHyperlinkDetector() };
-    }
-
-    @Override
-    public IInformationPresenter getInformationPresenter(ISourceViewer sourceViewer) {
-        return super.getInformationPresenter(sourceViewer);
     }
 
     public void setEditor(JsonEditor editor) {

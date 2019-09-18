@@ -29,10 +29,10 @@ import java.util.Set;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.reprezen.swagedit.core.editor.JsonDocument;
 import com.reprezen.swagedit.core.model.AbstractNode;
-import com.reprezen.swagedit.core.model.Location;
 import com.reprezen.swagedit.core.model.Model;
 import com.reprezen.swagedit.core.validation.JsonSchemaValidator;
 import com.reprezen.swagedit.core.validation.SwaggerError;
+import com.reprezen.swagedit.core.validation.SwaggerErrorFactory;
 
 /**
  * JSON Reference Validator
@@ -42,6 +42,8 @@ public class JsonReferenceValidator {
     private final JsonReferenceCollector collector;
     private final JsonReferenceFactory referenceFactory;
     private final JsonSchemaValidator schemaValidator;
+
+    private final SwaggerErrorFactory errorFactory = new SwaggerErrorFactory();
 
     public JsonReferenceValidator(JsonSchemaValidator validator, JsonReferenceFactory factory) {
         this.referenceFactory = factory;
@@ -79,16 +81,17 @@ public class JsonReferenceValidator {
 
         for (JsonReference reference : references.keySet()) {
             if (reference instanceof JsonReference.SimpleReference) {
-                errors.addAll(
-                        createReferenceError(SEVERITY_WARNING, warning_simple_reference, references.get(reference)));
+                errors.addAll(createReferenceError(doc, SEVERITY_WARNING, warning_simple_reference,
+                        references.get(reference)));
             } else if (reference.isInvalid()) {
-                errors.addAll(createReferenceError(SEVERITY_ERROR, error_invalid_reference, references.get(reference)));
+                errors.addAll(
+                        createReferenceError(doc, SEVERITY_ERROR, error_invalid_reference, references.get(reference)));
             } else if (reference.isMissing(doc, baseURI)) {
-                errors.addAll(
-                        createReferenceError(SEVERITY_WARNING, error_missing_reference, references.get(reference)));
+                errors.addAll(createReferenceError(doc, SEVERITY_WARNING, error_missing_reference,
+                        references.get(reference)));
             } else if (reference.containsWarning()) {
-                errors.addAll(
-                        createReferenceError(SEVERITY_WARNING, error_invalid_reference, references.get(reference)));
+                errors.addAll(createReferenceError(doc, SEVERITY_WARNING, error_invalid_reference,
+                        references.get(reference)));
             } else {
                 errors.addAll(validateType(doc, baseURI, reference, references.get(reference)));
             }
@@ -127,7 +130,7 @@ public class JsonReferenceValidator {
         for (String type : sourceTypes.keySet()) {
             Set<JsonNode> report = schemaValidator.validate(target, type);
             if (!report.isEmpty()) {
-                errors.addAll(createReferenceError(SEVERITY_WARNING, error_invalid_reference_type, sources));
+                errors.addAll(createReferenceError(doc, SEVERITY_WARNING, error_invalid_reference_type, sources));
             }
         }
 
@@ -178,25 +181,28 @@ public class JsonReferenceValidator {
         return valueNode;
     }
 
-    protected Set<SwaggerError> createReferenceError(int severity, String message, Collection<AbstractNode> sources) {
+    protected Set<SwaggerError> createReferenceError(JsonDocument document, int severity, String message,
+            Collection<AbstractNode> sources) {
         Set<SwaggerError> errors = new HashSet<>();
         for (AbstractNode source : sources) {
-            errors.add(createReferenceError(severity, message, source));
+            errors.add(createReferenceError(document, severity, message, source));
         }
         return errors;
     }
 
-    protected SwaggerError createReferenceError(int severity, String message, AbstractNode source) {
+    protected SwaggerError createReferenceError(JsonDocument document, int severity, String message,
+            AbstractNode source) {
         int line = 1;
+        AbstractNode ref = null;
         if (source != null) {
-            AbstractNode ref = referenceFactory.getReferenceValue(source);
-            if (ref != null) {
-                Location location = ref != null ? ref.getStart() : source.getStart();
-                line = location.getLine() + 1;
-            }
+            ref = referenceFactory.getReferenceValue(source);
+            // if (ref != null) {
+            // Location location = ref != null ? ref.getStart() : source.getStart();
+            // line = location.getLine() + 1;
+            // }
         }
-
-        return new SwaggerError(line, severity, message);
+        // new SwaggerError(line, severity, message);
+        return errorFactory.fromMessage(document, ref != null ? ref : source, severity, message);
     }
 
 }

@@ -81,29 +81,37 @@ public class QuickFixer implements IMarkerResolutionGenerator2 {
 
         @Override
         public IRegion processFix(IDocument document, IMarker marker) throws CoreException {
-            int line = (int) marker.getAttribute(IMarker.LINE_NUMBER);
+            int offset = (int) marker.getAttribute(IMarker.CHAR_START);
+
             try {
+
+                int line = document.getLineOfOffset(offset);
                 String indent = getIndent(document, line);
-                // getLineOffset() is zero-based, and imarkerLine is one-based.
-                int endOfCurrLine = document.getLineInformation(line - 1).getOffset()
-                        + document.getLineInformation(line - 1).getLength();
+                IRegion lineRegion = document.getLineInformation(line);
+
+                int endOfLineOffset = lineRegion.getOffset() + lineRegion.getLength();
+
                 // should be fine for first and last lines in the doc as well
                 String replacementText = indent + "type: object";
                 String delim = TextUtilities.getDefaultLineDelimiter(document);
-                document.replace(endOfCurrLine, 0, delim + replacementText);
-                return new Region(endOfCurrLine + delim.length(), replacementText.length());
+                document.replace(endOfLineOffset, 0, delim + replacementText);
+                return new Region(endOfLineOffset + delim.length(), replacementText.length());
+
             } catch (BadLocationException e) {
                 throw new CoreException(createStatus(e, "Cannot process the IMarker"));
             }
         }
 
         protected String getIndent(IDocument document, int line) throws BadLocationException {
-            String definitionLine = document.get(document.getLineOffset(line - 1), document.getLineLength(line - 1));
-            Matcher m = WHITESPACE_PATTERN.matcher(definitionLine);
-            final String definitionIndent = m.matches() ? m.group(1) : "";
+            String content = document.get(document.getLineOffset(line), document.getLineLength(line));
+
+            Matcher m = WHITESPACE_PATTERN.matcher(content);
+            String definitionIndent = m.matches() ? m.group(1) : "";
+
             StringBuilder indent = new StringBuilder();
             indent.append(definitionIndent);
             IntStream.range(0, getTabWidth()).forEach(el -> indent.append(" "));
+
             return indent.toString();
         }
 

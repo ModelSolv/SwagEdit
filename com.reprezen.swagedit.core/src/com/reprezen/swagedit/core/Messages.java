@@ -20,6 +20,9 @@ public class Messages extends NLS {
     public static String outline_proposal_project;
     public static String outline_proposal_workspace;
 
+    public static String quick_fix_hover_single_quick_fix;
+    public static String quick_fix_hover_multiple_quick_fixes;
+
     static {
         NLS.initializeMessages(BUNDLE_NAME, Messages.class);
     }

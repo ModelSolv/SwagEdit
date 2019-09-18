@@ -11,6 +11,7 @@
 package com.reprezen.swagedit.core.assist;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +62,12 @@ public class JsonQuickAssistProcessor implements IQuickAssistProcessor {
         return errorMessage;
     }
 
+    protected Stream<MarkerResolutionProposal> getMarkerResolution(IMarker marker, ISourceViewer viewer) {
+        return generators.stream() //
+                .flatMap(generator -> Stream.of(generator.getResolutions(marker))) //
+                .map(resolution -> new MarkerResolutionProposal(marker, resolution, viewer));
+    }
+
     @Override
     public boolean canFix(Annotation annotation) {
         if (annotation.isMarkedDeleted()) {
@@ -87,11 +94,13 @@ public class JsonQuickAssistProcessor implements IQuickAssistProcessor {
             return new ICompletionProposal[0];
         }
 
-        List<MarkerResolutionProposal> result = markers.stream() //
-                .flatMap(e -> generators.stream()
-                        .flatMap(generator -> Stream.of(generator.getResolutions(e))
-                                .map(m -> new MarkerResolutionProposal(e, m, invocationContext.getSourceViewer()))))
-                .collect(Collectors.toList());
+        Collection<MarkerResolutionProposal> result = markers.stream() //
+                .flatMap(marker -> getMarkerResolution(marker, invocationContext.getSourceViewer())) //
+                // This is how we return only distinct values.
+                // Without it we would have multiple quickfixes for the example preferences when multiple markers are
+                // on the same line.
+                .collect(Collectors.toMap(proposal -> proposal.getDisplayString(), proposal -> proposal, (u, v) -> u)) //
+                .values();
 
         return result.toArray(new ICompletionProposal[result.size()]);
     }
@@ -194,7 +203,6 @@ public class JsonQuickAssistProcessor implements IQuickAssistProcessor {
             }
             return null;
         }
-
     }
 
 }

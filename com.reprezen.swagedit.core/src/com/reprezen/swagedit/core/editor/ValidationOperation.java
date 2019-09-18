@@ -28,6 +28,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.reprezen.swagedit.core.validation.Markers;
 import com.reprezen.swagedit.core.validation.SwaggerError;
+import com.reprezen.swagedit.core.validation.SwaggerErrorFactory;
 import com.reprezen.swagedit.core.validation.Validator;
 
 public class ValidationOperation implements IWorkspaceRunnable {
@@ -38,6 +39,8 @@ public class ValidationOperation implements IWorkspaceRunnable {
     private final IDocumentProvider documentProvider;
     private final boolean parseFileContents;
     private final JsonEditor editor;
+
+    private final SwaggerErrorFactory factory = new SwaggerErrorFactory();
 
     public ValidationOperation(Validator validator, JsonEditor editor, boolean parseFileContents) {
         this.editor = editor;
@@ -100,11 +103,11 @@ public class ValidationOperation implements IWorkspaceRunnable {
     protected void validateYaml(IFile file, JsonDocument document) {
         if (document.getYamlError() instanceof YAMLException) {
             Markers.addMarker(editor, file, //
-                    SwaggerError.newYamlError((YAMLException) document.getYamlError()));
+                    factory.newYamlError(document, (YAMLException) document.getYamlError()));
         }
         if (document.getJsonError() instanceof JsonProcessingException) {
             Markers.addMarker(editor, file, //
-                    SwaggerError.newJsonError((JsonProcessingException) document.getJsonError()));
+                    factory.newJsonError((JsonProcessingException) document.getJsonError()));
         }
     }
 

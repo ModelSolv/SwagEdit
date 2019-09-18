@@ -55,6 +55,7 @@ public class NodeDeserializer extends JsonDeserializer<AbstractNode> {
         final ObjectNode node = model.objectNode(parent, ptr);
         node.setStartLocation(createLocation(startLocation));
 
+        JsonLocation last = null;
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String name = p.getCurrentName();
 
@@ -65,9 +66,10 @@ public class NodeDeserializer extends JsonDeserializer<AbstractNode> {
             AbstractNode v = deserialize(p, context);
             v.setProperty(name);
             node.put(name, v);
+            last = p.getTokenLocation();
         }
 
-        node.setEndLocation(createLocation(p.getCurrentLocation()));
+        node.setEndLocation(createLocation(last != null ? last : p.getCurrentLocation()));
         return node;
     }
 

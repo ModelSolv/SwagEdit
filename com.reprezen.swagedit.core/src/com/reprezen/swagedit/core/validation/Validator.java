@@ -10,16 +10,19 @@
  *******************************************************************************/
 package com.reprezen.swagedit.core.validation;
 
+import static org.eclipse.core.resources.IMarker.SEVERITY_ERROR;
+import static org.eclipse.core.resources.IMarker.SEVERITY_WARNING;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.IFileEditorInput;
 import org.yaml.snakeyaml.nodes.MappingNode;
@@ -58,6 +61,7 @@ public abstract class Validator {
 
     private final Set<ValidationProvider> providers;
     private final IPreferenceStore preferenceStore;
+    private final SwaggerErrorFactory errorFactory = new SwaggerErrorFactory();
 
     public Validator(IPreferenceStore preferenceStore) {
         this.preferenceStore = preferenceStore;
@@ -70,6 +74,10 @@ public abstract class Validator {
 
     protected IPreferenceStore getPreferenceStore() {
         return preferenceStore;
+    }
+
+    protected SwaggerErrorFactory getErrorFactory() {
+        return errorFactory;
     }
 
     /**
@@ -105,7 +113,7 @@ public abstract class Validator {
             if (yaml != null && model != null) {
                 errors.addAll(getSchemaValidator().validate(document));
                 errors.addAll(validateDocument(baseURI, document));
-                errors.addAll(checkDuplicateKeys(yaml));
+                errors.addAll(checkDuplicateKeys(document));
                 errors.addAll(getReferenceValidator().validate(baseURI, document, model));
             }
         }
@@ -126,7 +134,7 @@ public abstract class Validator {
 
         if (model != null && model.getRoot() != null) {
             for (AbstractNode node : model.allNodes()) {
-                executeModelValidation(model, node, errors);
+                errors.addAll(executeModelValidation(document, node));
                 // execute validation from each providers
                 providers.forEach(provider -> {
 
@@ -142,9 +150,13 @@ public abstract class Validator {
         return errors;
     }
 
-    protected void executeModelValidation(Model model, AbstractNode node, Set<SwaggerError> errors) {
-        checkArrayTypeDefinition(errors, node);
-        checkObjectTypeDefinition(errors, node);
+    protected Set<SwaggerError> executeModelValidation(JsonDocument document, AbstractNode node) {
+        Set<SwaggerError> errors = new HashSet<>();
+
+        checkArrayTypeDefinition(document, node).ifPresent(errors::add);
+        errors.addAll(checkObjectTypeDefinition(document, node));
+
+        return errors;
     }
 
     /**
@@ -153,17 +165,20 @@ public abstract class Validator {
      * @param errors
      * @param model
      */
-    protected void checkArrayTypeDefinition(Set<SwaggerError> errors, AbstractNode node) {
+    protected Optional<SwaggerError> checkArrayTypeDefinition(JsonDocument document, AbstractNode node) {
         if (hasArrayType(node)) {
             AbstractNode items = node.get("items");
             if (items == null) {
-                errors.add(error(node, IMarker.SEVERITY_ERROR, Messages.error_array_missing_items));
+                return Optional.of(error(document, node, SEVERITY_ERROR, Messages.error_array_missing_items));
             } else {
                 if (!items.isObject()) {
-                    errors.add(error(items, IMarker.SEVERITY_ERROR, Messages.error_array_items_should_be_object));
+                    return Optional
+                            .of(error(document, items, SEVERITY_ERROR, Messages.error_array_items_should_be_object));
                 }
             }
         }
+
+        return Optional.empty();
     }
 
     /**
@@ -186,14 +201,18 @@ public abstract class Validator {
      * @param errors
      * @param node
      */
-    protected void checkObjectTypeDefinition(Set<SwaggerError> errors, AbstractNode node) {
+    protected Set<SwaggerError> checkObjectTypeDefinition(JsonDocument document, AbstractNode node) {
+        Set<SwaggerError> errors = new HashSet<>();
+
         if (node instanceof ObjectNode) {
             JsonPointer ptr = node.getPointer();
             if (ptr != null && ValidationUtil.isInDefinition(ptr.toString())) {
-                checkMissingType(errors, node);
-                checkMissingRequiredProperties(errors, node);
+                checkMissingType(document, node).ifPresent(errors::add);
+                errors.addAll(checkMissingRequiredProperties(document, node));
             }
         }
+
+        return errors;
     }
 
     /**
@@ -202,26 +221,28 @@ public abstract class Validator {
      * @param errors
      * @param node
      */
-    protected void checkMissingType(Set<SwaggerError> errors, AbstractNode node) {
+    protected Optional<SwaggerError> checkMissingType(JsonDocument document, AbstractNode node) {
         // object
         if (node.get("properties") != null) {
             // bypass this node, it is a property whose name is `properties`
 
             if ("properties".equals(node.getProperty())) {
-                return;
+                return Optional.empty();
             }
 
             if (node.get("type") == null) {
-                errors.add(error(node, IMarker.SEVERITY_WARNING, Messages.error_object_type_missing));
+                return Optional.of(error(document, node, SEVERITY_WARNING, Messages.error_object_type_missing));
             } else {
                 AbstractNode typeValue = node.get("type");
                 if (!(typeValue instanceof ValueNode) || !Objects.equals("object", typeValue.asValue().getValue())) {
-                    errors.add(error(node, IMarker.SEVERITY_ERROR, Messages.error_wrong_type));
+                    return Optional.of(error(document, node, SEVERITY_ERROR, Messages.error_wrong_type));
                 }
             }
         } else if (isSchemaDefinition(node) && node.get("type") == null) {
-            errors.add(error(node, IMarker.SEVERITY_WARNING, Messages.error_type_missing));
+            return Optional.of(error(document, node, SEVERITY_WARNING, Messages.error_type_missing));
         }
+
+        return Optional.empty();
     }
 
     private boolean isSchemaDefinition(AbstractNode node) {
@@ -238,13 +259,15 @@ public abstract class Validator {
      * @param errors
      * @param node
      */
-    protected void checkMissingRequiredProperties(Set<SwaggerError> errors, AbstractNode node) {
+    protected Set<SwaggerError> checkMissingRequiredProperties(JsonDocument document, AbstractNode node) {
+        Set<SwaggerError> errors = new HashSet<>();
+
         if (node.get("required") instanceof ArrayNode) {
             ArrayNode required = node.get("required").asArray();
 
             AbstractNode properties = node.get("properties");
             if (properties == null) {
-                errors.add(error(node, IMarker.SEVERITY_WARNING, Messages.warning_missing_properties));
+                errors.add(error(document, node, SEVERITY_WARNING, Messages.warning_missing_properties));
             } else {
                 for (AbstractNode prop : required.elements()) {
                     if (prop instanceof ValueNode) {
@@ -252,26 +275,30 @@ public abstract class Validator {
                         String value = valueNode.getValue().toString();
 
                         if (properties.get(value) == null) {
-                            errors.add(error(valueNode, IMarker.SEVERITY_WARNING,
+                            errors.add(error(document, valueNode, SEVERITY_WARNING,
                                     String.format(Messages.warning_required_properties, value)));
                         }
                     }
                 }
             }
         }
+
+        return errors;
     }
 
-    protected SwaggerError error(AbstractNode node, int level, String message) {
-        return new SwaggerError(node.getStart().getLine() + 1, level, message);
+    protected SwaggerError error(JsonDocument document, AbstractNode node, int level, String message) {
+        // return new SwaggerError(node.getStart().getLine() + 1, level, message);
+        return errorFactory.fromMessage(document, node, level, message);
     }
 
     /*
      * Finds all duplicate keys in all objects present in the YAML document.
      */
-    protected Set<SwaggerError> checkDuplicateKeys(Node document) {
+    protected Set<SwaggerError> checkDuplicateKeys(JsonDocument document) {
+        Node root = document.getYaml();
         Map<Pair<Node, String>, Set<Node>> acc = new HashMap<>();
 
-        collectDuplicates(document, acc);
+        collectDuplicates(root, acc);
 
         Set<SwaggerError> errors = new HashSet<>();
         for (Pair<Node, String> key : acc.keySet()) {
@@ -279,7 +306,7 @@ public abstract class Validator {
 
             if (duplicates.size() > 1) {
                 for (Node duplicate : duplicates) {
-                    errors.add(createDuplicateError(key.getValue(), duplicate));
+                    errors.add(createDuplicateError(document, key.getValue(), duplicate));
                 }
             }
         }
@@ -320,8 +347,8 @@ public abstract class Validator {
         }
     }
 
-    protected SwaggerError createDuplicateError(String key, Node node) {
-        return new SwaggerError(node.getStartMark().getLine() + 1, IMarker.SEVERITY_WARNING,
+    protected SwaggerError createDuplicateError(JsonDocument document, String key, Node node) {
+        return errorFactory.fromNode(document, node, SEVERITY_WARNING,
                 String.format(Messages.error_duplicate_keys, key));
     }
 

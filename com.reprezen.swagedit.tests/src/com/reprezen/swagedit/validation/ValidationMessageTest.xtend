@@ -16,6 +16,7 @@ import org.junit.Test
 
 import static org.hamcrest.core.IsCollectionContaining.*
 import static org.junit.Assert.*
+import org.junit.Ignore
 
 /**
  * Tests as documentation for #9 - User-friendly validation messages
@@ -106,6 +107,7 @@ class ValidationMessageTest {
 		assertEquals(expected, errors.get(0).message)
 	}
 
+	@Ignore
 	@Test
 	def testMessage_oneOf_fail() {
 		// previous message 'instance failed to match exactly one schema (matched 0 out of 2)'

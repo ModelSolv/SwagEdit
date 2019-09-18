@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.reprezen.swagedit.core.validation.Messages
-import com.reprezen.swagedit.core.validation.SwaggerError
 import com.reprezen.swagedit.openapi3.editor.OpenApi3Document
 import com.reprezen.swagedit.openapi3.schema.OpenApi3Schema
 import com.reprezen.swagedit.openapi3.utils.Mocks
@@ -91,10 +90,12 @@ class ReferenceValidatorTest {
 		val resolvedURI = new URI(null, null, "/components/schemas/Valid")
 		val errors = validator(#{resolvedURI -> document.asJson}).validate(baseURI, document, document.model)
 
-		assertEquals(1, errors.size())		
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_invalid_reference_type)
-		))
+		assertEquals(1, errors.size())
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_invalid_reference_type, error.message)
 	}
 
 	@Test
@@ -120,9 +121,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{resolvedURI -> document.asJson}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
 	@Test
@@ -178,7 +181,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{resolvedURI -> document.asJson}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_invalid_reference)))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(error.message, Messages.error_invalid_reference)
 	}
 
 	@Test
@@ -204,9 +211,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{resolvedURI -> document.asJson}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
 	@Test
@@ -236,9 +245,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{otherURI -> other.asJson}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_invalid_reference_type)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(error.message, Messages.error_invalid_reference_type)
 	}
 
 	@Test
@@ -264,9 +275,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{otherURI -> null}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
 	@Test
@@ -299,7 +312,6 @@ class ReferenceValidatorTest {
 		val otherURI = URI.create("other.yaml#/components/parameters/foo")
 		val errors = validator(#{otherURI -> other.asJson}).validate(baseURI, document, document.model)
 
-		errors.forEach[println(it.message)]
 		assertEquals(0, errors.size())
 	}
 
@@ -333,9 +345,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{otherURI -> other.asJson}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_invalid_reference_type)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(error.message, Messages.error_invalid_reference_type)
 	}
 
 	@Test
@@ -368,9 +382,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{otherURI -> other.asJson}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
 	@Test
@@ -395,9 +411,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(9, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 8)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
 	@Test
@@ -450,9 +468,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(14, IMarker.SEVERITY_WARNING, Messages.error_missing_reference)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 13)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_missing_reference, error.message)
 	}
 
 	@Test
@@ -479,9 +499,11 @@ class ReferenceValidatorTest {
 		val errors = validator(#{}).validate(baseURI, document, document.model)
 
 		assertEquals(1, errors.size())
-		assertTrue(errors.contains(
-			new SwaggerError(14, IMarker.SEVERITY_WARNING, Messages.error_invalid_operation_ref)
-		))
+
+		val error = errors.head
+		assertEquals(document.getLineOfOffset(error.offset), 13)
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(Messages.error_invalid_operation_ref, error.message)
 	}
 
 	def asJson(String string) {

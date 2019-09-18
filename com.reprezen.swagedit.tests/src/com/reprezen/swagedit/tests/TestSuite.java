@@ -27,7 +27,6 @@ import com.reprezen.swagedit.json.references.JsonReferenceFactoryTest;
 import com.reprezen.swagedit.model.ModelTest;
 import com.reprezen.swagedit.schema.SwaggerSchemaTest;
 import com.reprezen.swagedit.templates.CodeTemplateContextTest;
-import com.reprezen.swagedit.validation.ErrorProcessorTest;
 import com.reprezen.swagedit.validation.MultipleSwaggerErrorMessageTest;
 import com.reprezen.swagedit.validation.ReferenceValidatorTest;
 import com.reprezen.swagedit.validation.ValidationMessageTest;
@@ -48,7 +47,6 @@ import com.reprezen.swagedit.validation.ValidatorTest;
         ModelTest.class, //
         SwaggerSchemaTest.class, //
         CodeTemplateContextTest.class, //
-        ErrorProcessorTest.class, //
         MultipleSwaggerErrorMessageTest.class, //
         ReferenceValidatorTest.class, //
         ValidationMessageTest.class, //

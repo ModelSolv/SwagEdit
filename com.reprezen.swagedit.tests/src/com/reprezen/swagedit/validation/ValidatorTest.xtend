@@ -11,7 +11,6 @@
 package com.reprezen.swagedit.validation
 
 import com.reprezen.swagedit.core.validation.Messages
-import com.reprezen.swagedit.core.validation.SwaggerError
 import com.reprezen.swagedit.editor.SwaggerDocument
 import java.io.IOException
 import java.net.URI
@@ -65,7 +64,7 @@ class ValidatorTest {
 
 		val error = errors.get(0)
 		assertEquals(IMarker.SEVERITY_ERROR, error.getLevel())
-		assertEquals(1, error.getLine())
+		assertEquals(0, error.offset)
 	}
 
 	@Test
@@ -86,7 +85,7 @@ class ValidatorTest {
 
 		val error = errors.get(0)
 		assertEquals(IMarker.SEVERITY_ERROR, error.getLevel())
-		assertEquals(5, error.getLine())
+		assertEquals(4, document.getLineOfOffset(error.offset))
 	}
 
 	@Test
@@ -110,7 +109,7 @@ class ValidatorTest {
 
 		val error = errors.get(0)
 		assertEquals(IMarker.SEVERITY_ERROR, error.getLevel())
-		assertEquals(8, error.getLine())
+		assertEquals(7, document.getLineOfOffset(error.offset))
 	}
 
 	@Test
@@ -136,7 +135,7 @@ class ValidatorTest {
 
 		val error = errors.get(0)
 		assertEquals(IMarker.SEVERITY_ERROR, error.getLevel())
-		assertEquals(9, error.getLine())
+		assertEquals(8, document.getLineOfOffset(error.offset))
 	}
 
 	@Test
@@ -165,7 +164,7 @@ class ValidatorTest {
 
 		val error = errors.get(0)
 		assertEquals(IMarker.SEVERITY_ERROR, error.getLevel())
-		assertEquals(5, error.getLine())
+		assertEquals(6, document.getLineOfOffset(error.offset))
 	}
 
 	@Test
@@ -189,12 +188,9 @@ class ValidatorTest {
 		document.set(content)
 		val errors = validator.validate(document, null as URI)
 
-		assertEquals(1, errors.size())
-
-		errors.forEach [
-			assertTrue(it.line == 10 || it.line == 11)
-			assertEquals(IMarker.SEVERITY_ERROR, it.level)
-		]
+		assertEquals(3, errors.size())
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(8, 9, 10))
+		assertThat(errors.map[level], hasItems(IMarker.SEVERITY_ERROR))
 	}
 
 	@Test
@@ -217,11 +213,10 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 
 		assertEquals(2, errors.size())
-		assertThat(errors,
-			hasItems(
-				new SwaggerError(1, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "swagger")),
-				new SwaggerError(2, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "swagger"))
-			))
+
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(0, 1))
+		assertThat(errors.map[level], hasItems(IMarker.SEVERITY_WARNING))
+		assertThat(errors.map[message], hasItems(String.format(Messages.error_duplicate_keys, "swagger")))
 	}
 
 	@Test
@@ -269,11 +264,11 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 
 		assertEquals(2, errors.size())
-		assertThat(errors,
-			hasItems(
-				new SwaggerError(3, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "version")),
-				new SwaggerError(4, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "version"))
-			))
+
+		val error = errors.head
+		assertEquals(2, document.getLineOfOffset(error.offset))
+		assertEquals(IMarker.SEVERITY_WARNING, error.level)
+		assertEquals(String.format(Messages.error_duplicate_keys, "version"), error.message)
 	}
 
 	@Test
@@ -301,11 +296,11 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 
 		assertEquals(2, errors.size())
-		assertThat(errors,
-			hasItems(
-				new SwaggerError(10, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "in")),
-				new SwaggerError(11, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "in"))
-			))
+
+		val error = errors.head
+		assertEquals(error.offset, document.getLineOffset(10))
+		assertEquals(error.level, IMarker.SEVERITY_WARNING)
+		assertEquals(error.message, String.format(Messages.error_duplicate_keys, "in"))
 	}
 
 	@Test
@@ -330,11 +325,10 @@ class ValidatorTest {
 		val errors = validator.validate(document, null as URI)
 
 		assertEquals(2, errors.size())
-		assertThat(errors,
-			hasItems(
-				new SwaggerError(8, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "responses")),
-				new SwaggerError(11, IMarker.SEVERITY_WARNING, String.format(Messages.error_duplicate_keys, "responses"))
-			))
+
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(7, 10))
+		assertThat(errors.map[level], hasItems(IMarker.SEVERITY_WARNING))
+		assertThat(errors.map[message], hasItems(String.format(Messages.error_duplicate_keys, "responses")))
 	}
 
 	@Test
@@ -459,7 +453,6 @@ class ValidatorTest {
 		document.onChange()
 
 		assertThat(document.yamlError, notNullValue)
-		println(document.yamlError)
 		assertThat(document.yamlError.message,
 			equalTo(
 				"found undefined alias scope_values_BROKEN\n in 'reader', line 26, column 11:\n        enum: *scope_values_BROKEN\n              ^\n"))
@@ -474,21 +467,21 @@ class ValidatorTest {
 	@Test
 	def void testArrayWithItemsAreValid() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo/{bar}:
-		    get:
-		      responses:
-		        '200':
-		          description: OK
-		definitions:
-		  Pets:
-		    type: array
-		    items: 
-		      type: string
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo/{bar}:
+			    get:
+			      responses:
+			        '200':
+			          description: OK
+			definitions:
+			  Pets:
+			    type: array
+			    items: 
+			      type: string
 		'''
 
 		document.set(content)
@@ -500,59 +493,59 @@ class ValidatorTest {
 	@Test
 	def void testArrayWithMissingItemsAreNotValid() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo/{bar}:
-		    get:
-		      responses:
-		        '200':
-		          description: OK
-		definitions:
-		  Pets:
-		    type: array
-		  Foo:
-		    type: object
-		    properties:
-		      bar:
-		        type: array
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo/{bar}:
+			    get:
+			      responses:
+			        '200':
+			          description: OK
+			definitions:
+			  Pets:
+			    type: array
+			  Foo:
+			    type: object
+			    properties:
+			      bar:
+			        type: array
 		'''
 
 		document.set(content)
 		document.onChange()
 
-		val errors = validator.validate(document, null as URI)		
-		assertEquals(2, errors.size())		
+		val errors = validator.validate(document, null as URI)
+		assertEquals(2, errors.size())
 		assertTrue(errors.map[message].forall[it.equals(Messages.error_array_missing_items)])
-		assertThat(errors.map[line], hasItems(12, 17))
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(11, 16))
 	}
-	
+
 	@Test
 	def void testValidateMissingTypeInDefinitions() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo:
-		    get:
-		      responses:
-		        '200':
-		          description: OK
-		definitions:
-		  Foo:
-		    properties:
-		      bar:
-		        type: string
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo:
+			    get:
+			      responses:
+			        '200':
+			          description: OK
+			definitions:
+			  Foo:
+			    properties:
+			      bar:
+			        type: string
 		'''
 
 		document.set(content)
 		document.onChange()
 
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertEquals(Messages.error_object_type_missing, errors.get(0).message)
 	}
@@ -560,28 +553,28 @@ class ValidatorTest {
 	@Test
 	def void testValidateWrongTypeDefinition() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo:
-		    get:
-		      responses:
-		        '200':
-		          description: OK
-		definitions:
-		  Foo:
-		    type: string
-		    properties:
-		      bar:
-		        type: string
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo:
+			    get:
+			      responses:
+			        '200':
+			          description: OK
+			definitions:
+			  Foo:
+			    type: string
+			    properties:
+			      bar:
+			        type: string
 		'''
 
 		document.set(content)
 		document.onChange()
 
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertEquals(Messages.error_wrong_type, errors.get(0).message)
 	}
@@ -589,30 +582,30 @@ class ValidatorTest {
 	@Test
 	def void testValidateMissingRequiredProperties() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo:
-		    get:
-		      responses:
-		        '200':
-		          description: OK
-		definitions:
-		  Foo:
-		    type: object
-		    properties:
-		      bar:
-		        type: string
-		    required:
-		      - baz
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo:
+			    get:
+			      responses:
+			        '200':
+			          description: OK
+			definitions:
+			  Foo:
+			    type: object
+			    properties:
+			      bar:
+			        type: string
+			    required:
+			      - baz
 		'''
 
 		document.set(content)
 		document.onChange()
 
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertEquals(String.format(Messages.warning_required_properties, "baz"), errors.get(0).message)
 	}
@@ -620,27 +613,27 @@ class ValidatorTest {
 	@Test
 	def void testValidateInlineSchemas() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo:
-		    get:
-		      description: ok
-		      responses:
-		        '200':
-		          description: OK
-		          schema:
-		            properties:
-		              bar:
-		                type: string
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo:
+			    get:
+			      description: ok
+			      responses:
+			        '200':
+			          description: OK
+			          schema:
+			            properties:
+			              bar:
+			                type: string
 		'''
 
 		document.set(content)
 		document.onChange()
 
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertEquals(Messages.error_object_type_missing, errors.get(0).message)
 	}
@@ -648,63 +641,63 @@ class ValidatorTest {
 	@Test
 	def void testArrayWithItemsIsInvalid() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo/{bar}:
-		    get:
-		      responses:
-		        '200':
-		          description: OK
-		definitions:
-		  Pets:
-		    type: array
-		    items:
-		      - type: string		 
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo/{bar}:
+			    get:
+			      responses:
+			        '200':
+			          description: OK
+			definitions:
+			  Pets:
+			    type: array
+			    items:
+			      - type: string		 
 		'''
 
 		document.set(content)
 		document.onChange()
 
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertTrue(errors.map[message].forall[it.equals(Messages.error_array_items_should_be_object)])
-		assertThat(errors.map[line], hasItems(14))
+		assertThat(errors.map[document.getLineOfOffset(offset)], hasItems(13))
 	}
 
 	@Test
 	def void testObjectWithPropertyNamedProperties_ShouldBeValid() {
 		val content = '''
-		swagger: '2.0'
-		info:
-		  version: 0.0.0
-		  title: Simple API
-		paths:
-		  /foo/{bar}:
-		    get:
-		      responses:
-		        '200':
-		          description: OK
-		definitions:
-		  Pets:
-		    type: object
-		    properties:
-		      properties:
-		        type: object
-		        properties:
-		          name: 
-		            type: string
+			swagger: '2.0'
+			info:
+			  version: 0.0.0
+			  title: Simple API
+			paths:
+			  /foo/{bar}:
+			    get:
+			      responses:
+			        '200':
+			          description: OK
+			definitions:
+			  Pets:
+			    type: object
+			    properties:
+			      properties:
+			        type: object
+			        properties:
+			          name: 
+			            type: string
 		'''
 
 		document.set(content)
 		document.onChange()
 
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(0, errors.size())
 	}
-	
+
 	@Test
 	def void testValidationShouldPass_IfRefIsCorrectType() {
 		val content = '''
@@ -718,7 +711,7 @@ class ValidatorTest {
 			      responses:
 			        '200':
 			          $ref: "#/responses/ok"
-
+			
 			responses:
 			  ok:
 			    description: Ok
@@ -779,10 +772,10 @@ class ValidatorTest {
 		'''
 
 		document.set(content)
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(0, errors.size())
 	}
-	
+
 	@Test
 	def void testValidationShouldFail_ForArraysInWrongItemType() {
 		val content = '''
@@ -806,7 +799,7 @@ class ValidatorTest {
 		'''
 
 		document.set(content)
-		val errors = validator.validate(document, null as URI)		
+		val errors = validator.validate(document, null as URI)
 		assertEquals(1, errors.size())
 		assertTrue(errors.map[message].forall[it.equals(Messages.error_invalid_reference_type)])
 	}

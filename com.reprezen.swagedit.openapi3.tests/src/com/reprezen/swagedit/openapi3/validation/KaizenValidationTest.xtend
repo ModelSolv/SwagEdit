@@ -7,12 +7,14 @@ import java.nio.file.Paths
 import org.junit.Test
 
 import static org.junit.Assert.*
+import org.junit.Ignore
 
 class KaizenValidationTest {
 
 	val validator = ValidationHelper.validator(true)
 	val document = new OpenApi3Document(new OpenApi3Schema)
 
+	@Ignore
 	@Test
 	def void testValidation_OnMInvalidType() {
 		val resource = Paths.get("resources", "tests", "validation_type.yaml")

@@ -10,9 +10,18 @@
  *******************************************************************************/
 package com.reprezen.swagedit.core.validation;
 
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
+import static java.util.stream.Stream.of;
+
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.dadacoalition.yedit.YEditLog;
 import org.eclipse.core.resources.IMarker;
@@ -21,6 +30,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfigurationBuilder;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.reprezen.swagedit.core.Activator;
@@ -30,6 +41,7 @@ public class JsonSchemaValidator {
 
     private final LoadingConfiguration loadingConfiguration;
     private final JsonSchemaFactory factory;
+    private final SwaggerErrorFactory errorFactory = new SwaggerErrorFactory();
     private final JsonNode schema;
 
     public JsonSchemaValidator(JsonNode schema, Map<String, JsonNode> preloadSchemas) {
@@ -48,8 +60,25 @@ public class JsonSchemaValidator {
         return loadingConfigurationBuilder.freeze();
     }
 
+    private Stream<JsonNode> asStream(Iterator<? extends JsonNode> it) {
+        return StreamSupport.stream(spliteratorUnknownSize(it, ORDERED), false);
+    }
+
+    private Stream<JsonNode> asReportStream(Iterator<? extends ProcessingMessage> it) {
+        return StreamSupport.stream(spliteratorUnknownSize(it, ORDERED), false).map(e -> e.asJson());
+    }
+
+    private final Function<JsonNode, Stream<JsonNode>> flattenReports() {
+        return message -> {
+            if (message.has("nrSchemas") && message.get("nrSchemas").asInt() > 1) {
+                return asStream(message.get("reports").elements()).flatMap(flattenReports());
+            } else {
+                return message.isArray() ? asStream(message.elements()).flatMap(flattenReports()) : of(message);
+            }
+        };
+    }
+
     public Set<SwaggerError> validate(JsonDocument document) {
-        final ErrorProcessor processor = new ErrorProcessor(document.getYaml(), schema);
         final Set<SwaggerError> errors = new HashSet<>();
 
         JsonSchema jsonSchema = null;
@@ -61,9 +90,16 @@ public class JsonSchemaValidator {
         }
 
         try {
-            errors.addAll(processor.processReport(jsonSchema.validate(document.asJson(), true)));
+            ProcessingReport report = jsonSchema.validate(document.asJson(), true);
+
+            errors.addAll(asReportStream(report.iterator()) //
+                    .flatMap(flattenReports()) //
+                    .map(m -> errorFactory.fromSchemaReport(document, m)) //
+                    .collect(Collectors.toList()));
+
         } catch (ProcessingException e) {
-            errors.addAll(processor.processMessage(e.getProcessingMessage()));
+            errors.add(new SwaggerError(IMarker.SEVERITY_ERROR, 0, 0,
+                    errorFactory.getMessageProcessor().rewriteMessage(e.getProcessingMessage().asJson())));
         }
 
         return errors;
