@@ -88,7 +88,7 @@ public abstract class JsonEditor extends YEdit implements IShowInSource, IShowIn
     public static final String CONTEXT = "com.reprezen.swagedit.context";
 
     private ProjectionSupport projectionSupport;
-    private Annotation[] oldAnnotations;
+    private Map<AbstractNode, ProjectionAnnotation> oldProjectionAnnotations = new HashMap<>();;
     private ProjectionAnnotationModel annotationModel;
     private Composite topPanel;
     protected JsonSourceViewerConfiguration sourceViewerConfiguration;
@@ -308,14 +308,23 @@ public abstract class JsonEditor extends YEdit implements IShowInSource, IShowIn
         return viewer;
     }
 
-    public void updateFoldingStructure(List<Position> positions) {
+    public void updateFoldingStructure(Iterable<AbstractNode> newNodes, JsonDocument document) {
         final Map<Annotation, Position> newAnnotations = new HashMap<Annotation, Position>();
-        for (Position position : positions) {
-            newAnnotations.put(new ProjectionAnnotation(), position);
+        final Map<AbstractNode, ProjectionAnnotation> node2Annotations = new HashMap<>();
+        for (AbstractNode node : newNodes) {
+            if (node.isObject()) {
+                Position position = node.getPosition(document, true);
+                boolean isCollapsed = false;
+                if (oldProjectionAnnotations.get(node) != null) {
+                    isCollapsed = oldProjectionAnnotations.get(node).isCollapsed();
+                }
+                ProjectionAnnotation newAnnotation = new ProjectionAnnotation(isCollapsed);
+                newAnnotations.put(newAnnotation, position);
+                node2Annotations.put(node, newAnnotation);
+            }
         }
-
-        annotationModel.modifyAnnotations(oldAnnotations, newAnnotations, null);
-        oldAnnotations = newAnnotations.keySet().toArray(new Annotation[0]);
+        annotationModel.modifyAnnotations(oldProjectionAnnotations.values().toArray(new Annotation[0]), newAnnotations, null);
+        oldProjectionAnnotations = node2Annotations;
     }
 
     @Override

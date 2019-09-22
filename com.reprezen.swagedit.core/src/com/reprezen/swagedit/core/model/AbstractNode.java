@@ -193,7 +193,18 @@ public abstract class AbstractNode {
      * @return position inside the document
      */
     public Position getPosition(IDocument document) {
-        boolean selectEntireElement = false;
+        return getPosition(document, false);
+    }
+    
+    /**
+     * Returns the position of the node inside the given document. <br/>
+     * The position matches the area that contains all the node's content.
+     * 
+     * @param document
+     * @param selectEntireElement - the entire element will be selected if true, only the first line otherwise
+     * @return position inside the document
+     */
+    public Position getPosition(IDocument document, boolean selectEntireElement) {
         int startLine = getStart().getLine();
         int offset = 0;
         int length = 0;
